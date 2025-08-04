@@ -1,31 +1,50 @@
-// Importing required dependencies
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db'); //Import custom MongoDB connection
+const connectDB = require('./config/db');
+
 const userRoutes = require('./routes/userRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const goalRoutes = require('./routes/goalRoutes');
+const summaryRoutes = require('./routes/summaryRoutes');
+
 
 dotenv.config();
 
-
-// Create an Express app
-const app = express();
-app.use(express.json());
-
-
-//Adding Routes
-app.use('/api/users', userRoutes);
-
-// Middleware to allow parsing of JSON request bodies
-app.use(express.json());
-
-// Connect to MongoDB using db.js
+// Connect to MongoDB first
 connectDB();
 
-// Port number from .env or fallback to 3000
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-// Start the server and listen on the specified port
+//Enable Cors for frontend
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}))
+
+// Middleware
+app.use(express.json());
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
+});
+
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/budgets', budgetRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/summary', summaryRoutes);
+
+
+// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
