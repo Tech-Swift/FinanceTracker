@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useAuthModal } from "../context/AuthModalContext";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function AuthModal() {
   const [formData, setFormData] = useState({
@@ -20,7 +21,6 @@ export default function AuthModal() {
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ use global modal context (including tab state)
   const { open, closeModal, tab, setTab } = useAuthModal();
 
   const handleChange = (e) => {
@@ -30,21 +30,43 @@ export default function AuthModal() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login({ email: formData.email, password: formData.password });
-    setLoading(false);
-    if (success) {
-      closeModal(); // ✅ close on success
-      navigate("/");
+
+    try {
+      const success = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (success) {
+        toast.success("Welcome back!");
+        closeModal();
+        navigate("/");
+      } else {
+        toast.error("Invalid email or password.");
+      }
+    } catch (err) {
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await signup(formData);
-    setLoading(false);
-    if (success) {
-      setTab("login"); // ✅ switch to login after signup success
+
+    try {
+      const success = await signup(formData);
+      if (success) {
+        toast.success("Signup successful! redirecting to login.");
+        setTab("login");
+      } else {
+        toast.error("Signup failed. Please check your input.");
+      }
+    } catch (err) {
+      toast.error("Signup error. Try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 

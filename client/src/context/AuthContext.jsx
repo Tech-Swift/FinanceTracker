@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from '../lib/utils';
-import { toast } from 'sonner';
 
 const AuthContext = createContext();
 
@@ -36,10 +35,8 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(profileRes.data);
-      toast.success('Logged in successfully!');
       return true;
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Login failed.');
       return false;
     }
   };
@@ -47,10 +44,8 @@ export const AuthProvider = ({ children }) => {
   const signup = async ({ name, email, password, confirmPassword }) => {
     try {
       await axios.post('/users/signup', { name, email, password, confirmPassword });
-      toast.success('Signup successful! You can now log in.');
       return true;
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Signup failed.');
       return false;
     }
   };
@@ -59,7 +54,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    toast.success('Logged out.');
   };
 
   return (
