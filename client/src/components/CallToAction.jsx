@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuthModal } from "../context/AuthModalContext";
 
 export default function CallToAction() {
+  const { openModal } = useAuthModal();
+
   return (
     <section className="w-full py-20 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
       <motion.div
@@ -17,7 +20,10 @@ export default function CallToAction() {
         <p className="text-lg md:text-xl mb-8">
           Start tracking your spending, saving, and growing your money today.
         </p>
-        <Button className="bg-white text-yellow-700 font-semibold px-6 py-3 text-lg hover:bg-gray-100 transition">
+        <Button
+          onClick={() => openModal("signup")}
+          className="bg-white text-yellow-700 font-semibold px-6 py-3 text-lg hover:bg-gray-100 transition"
+        >
           Get Started Now
         </Button>
       </motion.div>

@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { useAuthModal } from "../context/AuthModalContext";
 
 export default function Hero() {
+  const { openModal } = useAuthModal();
+
   return (
     <section className="w-full bg-gradient-to-br from-blue-50 to-white py-20">
       <div className="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10">
@@ -22,10 +24,10 @@ export default function Hero() {
           </p>
 
           <Button
-            asChild
+            onClick={() => openModal("signup")}
             className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
           >
-            <Link to="/signup">Get Started</Link>
+            Get Started
           </Button>
         </motion.div>
 

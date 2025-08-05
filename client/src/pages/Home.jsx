@@ -1,5 +1,5 @@
-import { useState } from "react";
-import API from "../lib/utils";
+import { AuthModalProvider } from "../context/AuthModalContext";
+import AuthModal from "../components/AuthModal";
 
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
@@ -11,18 +11,21 @@ import CallToAction from "../components/CallToAction";
 import Footer from "../components/Footer";
 
 export default function Home() {
-
-
   return (
-    <div className="w-full overflow-x-hidden">
-      <Navbar />
-      <Hero />
-      <Features />
-      <Services />
-      <About />
-      <Testimonials />
-      <CallToAction />
-      <Footer />
-    </div>
+    <AuthModalProvider>
+      <div className="w-full overflow-x-hidden">
+        <Navbar />
+        <Hero />
+        <Features />
+        <Services />
+        <About />
+        <Testimonials />
+        <CallToAction />
+        <Footer />
+      </div>
+
+      {/* Important: This must be placed here to ensure modal renders */}
+      <AuthModal />
+    </AuthModalProvider>
   );
 }

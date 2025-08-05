@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import ThemeToggle  from "./ThemeToggle";
+import { Link, useNavigate } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useAuthModal } from "../context/AuthModalContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { openModal } = useAuthModal();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <header className="w-full sticky top-0 z-50 bg-white shadow-sm">
@@ -27,9 +37,21 @@ export default function Navbar() {
           <Link to="/about" className="text-gray-700 hover:text-blue-600 transition">About</Link>
           <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition">Contact</Link>
 
-          <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Link to="/login">Login</Link>
-          </Button>
+          {user ? (
+            <Button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button
+              onClick={() => openModal("login")}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Login
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Menu */}
@@ -45,9 +67,28 @@ export default function Navbar() {
                 <Link to="/" onClick={() => setIsOpen(false)} className="text-gray-700 hover:text-blue-600">Home</Link>
                 <Link to="/about" onClick={() => setIsOpen(false)} className="text-gray-700 hover:text-blue-600">About</Link>
                 <Link to="/contact" onClick={() => setIsOpen(false)} className="text-gray-700 hover:text-blue-600">Contact</Link>
-                <Button asChild className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link to="/login" onClick={() => setIsOpen(false)}>Login</Link>
-                </Button>
+
+                {user ? (
+                  <Button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Logout
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      openModal("login");
+                      setIsOpen(false);
+                    }}
+                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Login
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
