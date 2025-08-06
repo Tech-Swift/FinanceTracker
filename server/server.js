@@ -10,6 +10,7 @@ const budgetRoutes = require('./routes/budgetRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const goalRoutes = require('./routes/goalRoutes');
 const summaryRoutes = require('./routes/summaryRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use('/api/budgets', budgetRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/summary', summaryRoutes);
+app.use('/api/reports', reportRoutes);
 
 
 // Start server
