@@ -7,6 +7,7 @@ import Services from "../components/Services";
 import About from "../components/About";
 import Testimonials from "../components/Testimonials";
 import CallToAction from "../components/CallToAction";
+import Pricing from "../components/Pricing";
 
 export default function Home() {
   const [, setTheme] = useState("light");
@@ -28,12 +29,13 @@ export default function Home() {
   return (
     <AuthModalProvider>
       <div className="w-full overflow-x-hidden bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300">
-        <Hero />
-        <Features />
-        <Services />
-        <About />
-        <Testimonials />
-        <CallToAction />
+        <section id="hero"><Hero /></section>
+        <section id="features"><Features /></section>
+        <section id="services"><Services /></section>
+        <section id="about"><About /></section>
+        <section id="testimonials"><Testimonials /></section>
+        <section id="cta"><CallToAction /></section>
+        <section id="pricing"><Pricing /></section>
       </div>
 
       {/* Important: This must be placed here to ensure modal renders */}

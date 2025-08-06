@@ -1,11 +1,31 @@
 import { Facebook, Twitter, Instagram, Linkedin, Github } from "lucide-react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Footer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Smooth scroll to section if already on Home page
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Handles both internal scroll and route to Home then scroll
+  const handleNavigate = (id) => {
+    if (location.pathname === "/") {
+      scrollToSection(id);
+    } else {
+      navigate(`/#${id}`);
+    }
+  };
+
   return (
     <footer className="w-full bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
       {/* Main Footer Content */}
@@ -45,10 +65,30 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Navigate</h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link></li>
-            <li><Link to="/features" className="hover:text-blue-600 dark:hover:text-blue-400">Features</Link></li>
-            <li><Link to="/pricing" className="hover:text-blue-600 dark:hover:text-blue-400">Pricing</Link></li>
-            <li><Link to="/about" className="hover:text-blue-600 dark:hover:text-blue-400">About</Link></li>
+            <li>
+              <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link>
+            </li>
+            <li>
+              <button
+                onClick={() => handleNavigate("features")}
+                className="hover:text-blue-600 dark:hover:text-blue-400 text-left"
+              >
+                Features
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => handleNavigate("pricing")}
+                className="hover:text-blue-600 dark:hover:text-blue-400 text-left"
+              >
+                Pricing
+              </button>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-blue-600 dark:hover:text-blue-400">
+                About
+              </Link>
+            </li>
           </ul>
         </div>
 
