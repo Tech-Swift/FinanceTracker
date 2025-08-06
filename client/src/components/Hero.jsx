@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuthModal } from "../context/AuthModalContext";
@@ -6,7 +7,7 @@ export default function Hero() {
   const { openModal } = useAuthModal();
 
   return (
-    <section className="w-full bg-gradient-to-br from-blue-50 to-white py-20">
+    <section className="w-full bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-950 py-20">
       <div className="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10">
         {/* Text */}
         <motion.div
@@ -15,17 +16,17 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white leading-tight">
             Take Control of Your{" "}
-            <span className="text-blue-600">Finances</span>
+            <span className="text-blue-600 dark:text-blue-400">Finances</span>
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
             Track spending, set goals, and save smarter — all in one place.
           </p>
 
           <Button
             onClick={() => openModal("signup")}
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 px-6 py-3"
           >
             Get Started
           </Button>

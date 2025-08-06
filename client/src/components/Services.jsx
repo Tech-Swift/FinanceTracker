@@ -1,3 +1,4 @@
+//eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import {
   FileBarChart2,
@@ -10,17 +11,17 @@ import {
 
 const leftServices = [
   {
-    icon: <FileBarChart2 className="w-6 h-6 text-blue-600" />,
+    icon: <FileBarChart2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Detailed Reports",
     description: "Track your spending patterns monthly and weekly.",
   },
   {
-    icon: <BellRing className="w-6 h-6 text-blue-600" />,
+    icon: <BellRing className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Bill Reminders",
     description: "Get notified before your bills are due.",
   },
   {
-    icon: <CreditCard className="w-6 h-6 text-blue-600" />,
+    icon: <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Smart Payments",
     description: "Link and manage multiple payment sources easily.",
   },
@@ -28,17 +29,17 @@ const leftServices = [
 
 const rightServices = [
   {
-    icon: <Banknote className="w-6 h-6 text-blue-600" />,
+    icon: <Banknote className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Account Syncing",
     description: "View all your bank accounts in one dashboard.",
   },
   {
-    icon: <Settings2 className="w-6 h-6 text-blue-600" />,
+    icon: <Settings2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Smart Categories",
     description: "Organize expenses automatically by type.",
   },
   {
-    icon: <PieChart className="w-6 h-6 text-blue-600" />,
+    icon: <PieChart className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
     title: "Spending Insights",
     description: "Visualize your income and expenses clearly.",
   },
@@ -46,10 +47,10 @@ const rightServices = [
 
 export default function Services() {
   return (
-    <section className="w-full bg-white py-20">
+    <section className="w-full bg-white dark:bg-gray-950 py-20">
       <div className="container mx-auto px-4">
         <motion.h2
-          className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12"
+          className="text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -64,15 +65,19 @@ export default function Services() {
             {leftServices.map((service, index) => (
               <motion.div
                 key={index}
-                className="p-5 bg-blue-50 rounded-xl shadow hover:shadow-md transition"
+                className="p-5 bg-blue-50 dark:bg-gray-900 rounded-xl shadow hover:shadow-md transition"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
                 <div className="mb-2">{service.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-800">{service.title}</h3>
-                <p className="text-sm text-gray-600">{service.description}</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                  {service.title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {service.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -86,7 +91,7 @@ export default function Services() {
             viewport={{ once: true }}
           >
             <img
-              src=""
+              src="" // You can add an image here
               alt="Financial dashboard"
               className="w-full h-full object-cover rounded-xl shadow-lg"
             />
@@ -97,15 +102,19 @@ export default function Services() {
             {rightServices.map((service, index) => (
               <motion.div
                 key={index}
-                className="p-5 bg-blue-50 rounded-xl shadow hover:shadow-md transition"
+                className="p-5 bg-blue-50 dark:bg-gray-900 rounded-xl shadow hover:shadow-md transition"
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
                 <div className="mb-2">{service.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-800">{service.title}</h3>
-                <p className="text-sm text-gray-600">{service.description}</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                  {service.title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {service.description}
+                </p>
               </motion.div>
             ))}
           </div>

@@ -45,6 +45,7 @@ export default function AuthModal() {
         toast.error("Invalid email or password.");
       }
     } catch (err) {
+      console.error("Login error:", err);
       toast.error("Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -64,6 +65,7 @@ export default function AuthModal() {
         toast.error("Signup failed. Please check your input.");
       }
     } catch (err) {
+      console.error("Signup error:", err);
       toast.error("Signup error. Try again later.");
     } finally {
       setLoading(false);

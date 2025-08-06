@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from '../lib/utils';
 
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }) => {
       setUser(profileRes.data);
       return true;
     } catch (err) {
+      console.error("Profile fetch failed:", err);
       return false;
     }
   };
@@ -46,6 +48,7 @@ export const AuthProvider = ({ children }) => {
       await axios.post('/users/signup', { name, email, password, confirmPassword });
       return true;
     } catch (err) {
+      console.error("Signup fetch failed:", err);
       return false;
     }
   };
