@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { useAuthModal } from "../context/AuthModalContext";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,9 +20,8 @@ export default function AuthModal() {
 
   const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
-  const navigate = useNavigate();
-
   const { open, closeModal, tab, setTab } = useAuthModal();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,7 +40,7 @@ export default function AuthModal() {
       if (success) {
         toast.success("Welcome back!");
         closeModal();
-        navigate("/");
+        navigate("/dashboard"); // ✅ Redirect to dashboard
       } else {
         toast.error("Invalid email or password.");
       }
@@ -59,7 +59,7 @@ export default function AuthModal() {
     try {
       const success = await signup(formData);
       if (success) {
-        toast.success("Signup successful! redirecting to login.");
+        toast.success("Signup successful! Redirecting to login.");
         setTab("login");
       } else {
         toast.error("Signup failed. Please check your input.");
@@ -81,16 +81,26 @@ export default function AuthModal() {
             <TabsTrigger value="signup">Signup</TabsTrigger>
           </TabsList>
 
-          {/* Login Tab */}
+          {/* Login Form */}
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4 mt-4">
               <div>
                 <Label>Email</Label>
-                <Input name="email" type="email" onChange={handleChange} required />
+                <Input
+                  name="email"
+                  type="email"
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label>Password</Label>
-                <Input name="password" type="password" onChange={handleChange} required />
+                <Input
+                  name="password"
+                  type="password"
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Logging in..." : "Login"}
@@ -108,7 +118,7 @@ export default function AuthModal() {
             </form>
           </TabsContent>
 
-          {/* Signup Tab */}
+          {/* Signup Form */}
           <TabsContent value="signup">
             <form onSubmit={handleSignup} className="space-y-4 mt-4">
               <div>
@@ -117,15 +127,30 @@ export default function AuthModal() {
               </div>
               <div>
                 <Label>Email</Label>
-                <Input name="email" type="email" onChange={handleChange} required />
+                <Input
+                  name="email"
+                  type="email"
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label>Password</Label>
-                <Input name="password" type="password" onChange={handleChange} required />
+                <Input
+                  name="password"
+                  type="password"
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label>Confirm Password</Label>
-                <Input name="confirmPassword" type="password" onChange={handleChange} required />
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing up..." : "Signup"}

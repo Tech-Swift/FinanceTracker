@@ -37,7 +37,7 @@ export default function About() {
           viewport={{ once: true }}
         >
           <img
-            src="" // Optional: Add a dashboard screenshot here
+            src="https://images.pexels.com/photos/4386371/pexels-photo-4386371.jpeg?auto=compress&cs=tinysrgb&w=800"
             alt="Finance tracker dashboard UI"
             className="w-full h-full object-cover rounded-xl shadow-lg"
           />

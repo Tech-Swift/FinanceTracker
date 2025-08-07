@@ -1,4 +1,4 @@
-//eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import {
   FileBarChart2,
@@ -91,7 +91,7 @@ export default function Services() {
             viewport={{ once: true }}
           >
             <img
-              src="" // You can add an image here
+              src="https://images.pexels.com/photos/4386372/pexels-photo-4386372.jpeg?auto=compress&cs=tinysrgb&w=800"
               alt="Financial dashboard"
               className="w-full h-full object-cover rounded-xl shadow-lg"
             />

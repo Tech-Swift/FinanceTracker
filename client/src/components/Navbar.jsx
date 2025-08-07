@@ -116,7 +116,7 @@ export default function Navbar() {
                       openModal("login");
                       setIsOpen(false);
                     }}
-                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                     className="mt-6 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 px-6 py-3"
                   >
                     Login
                   </Button>

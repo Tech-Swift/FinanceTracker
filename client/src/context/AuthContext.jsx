@@ -12,13 +12,13 @@ export const AuthProvider = ({ children }) => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
-      axios
-        .get('/users/profile', {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        })
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+
+      axios.get('/users/profile')
         .then((res) => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
           setToken(null);
           setUser(null);
         });
@@ -29,16 +29,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post('/users/login', { email, password });
       const { token } = res.data;
+
       localStorage.setItem('token', token);
       setToken(token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      const profileRes = await axios.get('/users/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const profileRes = await axios.get('/users/profile');
       setUser(profileRes.data);
       return true;
     } catch (err) {
-      console.error("Profile fetch failed:", err);
+      console.error("Login failed:", err);
       return false;
     }
   };
@@ -48,13 +48,14 @@ export const AuthProvider = ({ children }) => {
       await axios.post('/users/signup', { name, email, password, confirmPassword });
       return true;
     } catch (err) {
-      console.error("Signup fetch failed:", err);
+      console.error("Signup failed:", err);
       return false;
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
   };

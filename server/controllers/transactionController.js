@@ -32,12 +32,49 @@ exports.createTransaction = async (req, res) => {
 // READ
 exports.getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find({ userId: req.user._id }).populate('categoryId');
+    const { from, to, type, search } = req.query;
+
+    const query = { userId: req.user._id };
+
+    // 1. Date filter
+    if (from && to) {
+      const startDate = new Date(from);
+      const endDate = new Date(to);
+
+      // Ensure we include the full day for 'to'
+      endDate.setHours(23, 59, 59, 999);
+
+      query.date = { $gte: startDate, $lte: endDate };
+    }
+
+    // 2. Type filter
+    if (type && type !== "all") {
+      query.type = type;
+    }
+
+    // 3. Get all transactions (will filter category after)
+    let transactions = await Transaction.find(query).populate("categoryId");
+
+    // 4. Text search: description + category name
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+
+      transactions = transactions.filter(txn =>
+        searchRegex.test(txn.description) ||
+        searchRegex.test(txn.categoryId?.name || "")
+      );
+    }
+
     res.status(200).json({ transactions });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch transactions', error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch transactions",
+      error: error.message,
+    });
   }
 };
+
+
 
 // UPDATE
 exports.updateTransaction = async (req, res) => {

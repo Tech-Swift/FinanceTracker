@@ -22,7 +22,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: 'Email already exists' });
     }
 
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password, role: 'user' });
     await user.save();
 
     res.status(201).json({ message: 'SignUp Successful' });
@@ -65,6 +65,7 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
       token
     });
@@ -76,10 +77,12 @@ exports.login = async (req, res) => {
 
 exports.getUserProfile = (req, res) => {
   if (req.user) {
-    res.status(200).json(req.user);
+    const { _id, name, email, role } = req.user;
+    res.status(200).json({ id: _id, name, email, role });
   } else {
     res.status(404).json({ message: 'User not found' });
   }
 };
+
 
 
