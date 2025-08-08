@@ -1,6 +1,6 @@
 const Category = require('../models/Category');
 
-// CREATE
+// CREATE (Admin only)
 exports.createCategory = async (req, res) => {
   const { name, type, color } = req.body;
 
@@ -10,10 +10,9 @@ exports.createCategory = async (req, res) => {
 
   try {
     const category = new Category({
-      userId: req.user._id,
       name,
       type,
-      color
+      color,
     });
 
     const savedCategory = await category.save();
@@ -23,26 +22,26 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// READ
+// READ (Shared access)
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ userId: req.user._id });
+    const categories = await Category.find({});
     res.status(200).json({ categories });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch categories', error: error.message });
   }
 };
 
-// UPDATE
+// UPDATE (Admin only)
 exports.updateCategory = async (req, res) => {
   const categoryId = req.params.id;
   const { name, type, color } = req.body;
 
   try {
-    const category = await Category.findOne({ _id: categoryId, userId: req.user._id });
+    const category = await Category.findById(categoryId);
 
     if (!category) {
-      return res.status(404).json({ message: 'Category not found or unauthorized' });
+      return res.status(404).json({ message: 'Category not found' });
     }
 
     if (name) category.name = name;
@@ -56,16 +55,13 @@ exports.updateCategory = async (req, res) => {
   }
 };
 
-// DELETE
+// DELETE (Admin only)
 exports.deleteCategory = async (req, res) => {
   try {
-    const deleted = await Category.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user._id
-    });
+    const deleted = await Category.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Category not found or unauthorized' });
+      return res.status(404).json({ message: 'Category not found' });
     }
 
     res.status(200).json({ message: 'Category deleted' });

@@ -1,21 +1,17 @@
 const express = require('express');
 const router = express.Router();
-
 const {
   createCategory,
   getCategories,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 } = require('../controllers/categoryController');
+const { protect, adminOnly } = require('../middlewares/authMiddleware');
 
-const { protect } = require('../middlewares/authMiddleware');
+router.get('/', protect, getCategories); // all users can fetch
 
-router.route('/')
-  .post(protect, createCategory)
-  .get(protect, getCategories);
-
-router.route('/:id')
-  .put(protect, updateCategory)
-  .delete(protect, deleteCategory);
+router.post('/', protect, adminOnly, createCategory);
+router.put('/:id', protect, adminOnly, updateCategory);
+router.delete('/:id', protect, adminOnly, deleteCategory);
 
 module.exports = router;

@@ -5,7 +5,8 @@ const {
   createBudget,
   getBudgets,
   updateBudget,
-  deleteBudget
+  deleteBudget,
+  getFullySpentBudgets
 } = require('../controllers/budgetController');
 
 const { protect } = require('../middlewares/authMiddleware');
@@ -13,6 +14,9 @@ const { protect } = require('../middlewares/authMiddleware');
 router.route('/')
   .post(protect, createBudget)
   .get(protect, getBudgets);
+
+router.route('/spent')
+  .get(protect, getFullySpentBudgets);
 
 router.route('/:id')
   .put(protect, updateBudget)
