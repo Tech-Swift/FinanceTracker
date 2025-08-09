@@ -72,42 +72,50 @@ export default function BudgetForm({ budget, onClose, onSuccess }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const { categoryId, amount, startDate, endDate } = formData;
+  const { categoryId, amount, startDate, endDate } = formData;
 
-    if (!categoryId || !amount || !startDate || !endDate) {
-      console.error("Please fill in all fields.");
-      return;
-    }
+  if (!categoryId || !amount || !startDate || !endDate) {
+    console.error("Please fill in all fields.");
+    return;
+  }
 
-    const payload = {
-      category: categoryId,
-      amount: Number(amount),
-      startDate,
-      endDate,
-    };
-
-    try {
-      setLoading(true);
-
-      if (isEditing) {
-        await axios.put(`/budgets/${budget._id}`, payload);
-        toast.success("Budget updated successfully!");
-      } else {
-        await axios.post("/budgets", payload);
-        toast.success("Budget created successfully!");
-      }
-
-      onSuccess(); // refetch or close modal
-    } catch (error) {
-      console.error("Failed to submit budget", error);
-      toast.error("Something went wrong while saving the budget.");
-    } finally {
-      setLoading(false);
-    }
-
+  const payload = {
+    category: categoryId,
+    amount: Number(amount),
+    startDate,
+    endDate,
   };
+
+  try {
+    setLoading(true);
+
+    if (isEditing) {
+      await axios.put(`/budgets/${budget._id}`, payload);
+      toast.success("Budget updated successfully!");
+    } else {
+      await axios.post("/budgets", payload);
+      toast.success("Budget created successfully!");
+    }
+
+    // Safely call onSuccess if it's provided
+    if (typeof onSuccess === "function") {
+      onSuccess();
+    }
+
+    // Always close the modal
+    if (typeof onClose === "function") {
+      onClose();
+    }
+
+  } catch (error) {
+    console.error("Failed to submit budget", error);
+    toast.error("Something went wrong while saving the budget.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Dialog open onOpenChange={onClose}>

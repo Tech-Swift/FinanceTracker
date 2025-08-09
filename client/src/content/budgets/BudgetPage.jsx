@@ -2,130 +2,101 @@ import { useEffect, useState } from "react";
 import axios from "../../lib/utils";
 import { Button } from "@/components/ui/button";
 import BudgetForm from "./BudgetForm";
-import BudgetSummary from "./BudgetSummary";
 import BudgetTable from "./BudgetTable";
+import BudgetSummary from "./BudgetSummary";
+import BudgetFilter from "./BudgetFilter";
+import BudgetActions from "./BudgetActions";
 
 export default function BudgetPage() {
   const [budgets, setBudgets] = useState([]);
-  const [fullySpentBudgets, setFullySpentBudgets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editBudget, setEditBudget] = useState(null);
-
-  useEffect(() => {
-    fetchBudgets();
-    fetchFullySpentBudgets();
-  }, []);
+  const [filter, setFilter] = useState({ category: "", dateRange: "" });
 
   const fetchBudgets = async () => {
     try {
-      const response = await axios.get("/budgets");
-      setBudgets(Array.isArray(response.data.budgets) ? response.data.budgets : []);
-    } catch (err) {
-      console.error("Failed to fetch budgets:", err);
-      setBudgets([]);
+      setLoading(true);
+      const { data } = await axios.get("/budgets");
+      setBudgets(data);
+    } catch (error) {
+      console.error("Error fetching budgets:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchFullySpentBudgets = async () => {
+  useEffect(() => {
+    fetchBudgets();
+  }, []);
+
+  const handleAddBudget = async (budget) => {
     try {
-      const response = await axios.get("/budgets/fully-spent");
-      setFullySpentBudgets(Array.isArray(response.data.budgets) ? response.data.budgets : []);
-    } catch (err) {
-      console.error("Failed to fetch fully spent budgets:", err);
-      setFullySpentBudgets([]);
+      await axios.post("/budgets", budget);
+      fetchBudgets();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error adding budget:", error);
     }
   };
 
-  const handleEdit = (budget) => {
-    setEditBudget(budget);
-    setShowForm(true);
+  const handleUpdateBudget = async (id, updatedData) => {
+    try {
+      await axios.put(`/budgets/${id}`, updatedData);
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error updating budget:", error);
+    }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteBudget = async (id) => {
     try {
       await axios.delete(`/budgets/${id}`);
       fetchBudgets();
-      fetchFullySpentBudgets();
-    } catch (err) {
-      console.error("Delete failed:", err);
+    } catch (error) {
+      console.error("Error deleting budget:", error);
     }
   };
 
-  const handleInlineEditSave = async (id, updatedData) => {
-    try {
-      const response = await axios.put(`/budgets/${id}`, updatedData);
-      const updatedBudget = response.data.budget;
-
-      setBudgets((prev) => prev.map((b) => (b._id === id ? updatedBudget : b)));
-      setFullySpentBudgets((prev) => prev.map((b) => (b._id === id ? updatedBudget : b)));
-
-      // Refetch if remaining might have changed
-      fetchBudgets();
-      fetchFullySpentBudgets();
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
-
-  const handleFormClose = () => {
-    setEditBudget(null);
-    setShowForm(false);
-    fetchBudgets();
-    fetchFullySpentBudgets();
-  };
-
-  // Summary Calculations (only active budgets)
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.amount, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + (b.spent || 0), 0);
-  const totalRemaining = totalBudgeted - totalSpent;
+  const filteredBudgets = budgets.filter((b) => {
+    return (
+      (!filter.category || b.category === filter.category) &&
+      (!filter.dateRange || new Date(b.date) >= new Date(filter.dateRange.start) &&
+        new Date(b.date) <= new Date(filter.dateRange.end))
+    );
+  });
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      {/* Top Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Your Budgets</h1>
-        <Button onClick={() => setShowForm(true)}>+ Add Budget</Button>
+    <div className="p-4 space-y-6">
+      {/* Summary Cards */}
+      <BudgetSummary budgets={filteredBudgets} />
+
+      {/* Actions + Filter */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <BudgetActions onNewBudget={() => setShowForm(true)} />
+        <BudgetFilter filter={filter} setFilter={setFilter} />
       </div>
 
-      {/* Summary */}
-      <BudgetSummary
-        totalBudgeted={totalBudgeted}
-        totalSpent={totalSpent}
-        totalRemaining={totalRemaining}
-      />
-
-      {/* Active Budgets */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Active Budgets</h2>
+      {/* Budget Table */}
+      {loading ? (
+        <p>Loading budgets...</p>
+      ) : (
         <BudgetTable
-          budgets={budgets}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onEditSave={handleInlineEditSave}
+          budgets={filteredBudgets}
+          onUpdate={handleUpdateBudget}
+          onDelete={handleDeleteBudget}
         />
-      </div>
-
-      {/* Fully Spent Budgets */}
-      {fullySpentBudgets.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-600">Fully Spent Budgets</h2>
-          <BudgetTable
-            budgets={fullySpentBudgets}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onEditSave={handleInlineEditSave}
-          />
-        </div>
       )}
 
       {/* Budget Form Modal */}
       {showForm && (
-        <BudgetForm
-          open={showForm}
-          onClose={handleFormClose}
-          budget={editBudget}
-          onSuccess={handleFormClose}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
+            <BudgetForm
+              onSubmit={handleAddBudget}
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
