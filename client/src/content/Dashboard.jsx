@@ -3,9 +3,20 @@ import axios from "../lib/utils";
 import { Card, CardContent } from "../components/ui/card";
 import { Loader2 } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
+
 export default function Dashboard() {
+  const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Function to get dynamic greeting based on current time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -36,6 +47,16 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Greeting + subtitle */}
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          {getGreeting()}, {user?.name || "User"}!
+        </h1>
+        <p className="mt-1 text-lg text-gray-600 dark:text-gray-300">
+          Here is an Overview of your finances
+        </p>
+      </header>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard title="Total Income" value={summary.totalIncome} />

@@ -1,49 +1,87 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
-export default function BudgetTable({ budgets = [], onEdit, onDelete }) {
-  // Ensure budgets is always an array
-  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+export default function BudgetFilter({ filter, setFilter, categories = [] }) {
+  const [localCategory, setLocalCategory] = useState(filter.category || "");
+  const [localStartDate, setLocalStartDate] = useState(filter.dateRange?.start || "");
+  const [localEndDate, setLocalEndDate] = useState(filter.dateRange?.end || "");
 
-  if (safeBudgets.length === 0) {
-    return (
-      <div className="text-center text-gray-500 p-4">
-        No budgets found. Add one to get started.
-      </div>
-    );
-  }
+  useEffect(() => {
+    setLocalCategory(filter.category || "");
+    setLocalStartDate(filter.dateRange?.start || "");
+    setLocalEndDate(filter.dateRange?.end || "");
+  }, [filter]);
+
+    const applyFilter = (newCategory, newStart, newEnd) => {
+      setFilter({
+        category: newCategory === "all" ? "" : newCategory,
+        dateRange: {
+          start: newStart,
+          end: newEnd,
+        },
+      });
+    };
+
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Category</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Spent</TableHead>
-            <TableHead>Remaining</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {safeBudgets.map((budget) => (
-            <TableRow key={budget._id}>
-              <TableCell>{budget.category}</TableCell>
-              <TableCell>${budget.amount}</TableCell>
-              <TableCell>${budget.spent}</TableCell>
-              <TableCell>${budget.amount - budget.spent}</TableCell>
-              <TableCell className="flex gap-2">
-                <button onClick={() => onEdit(budget)} className="text-blue-500 hover:text-blue-700">
-                  <Pencil size={16} />
-                </button>
-                <button onClick={() => onDelete(budget._id)} className="text-red-500 hover:text-red-700">
-                  <Trash2 size={16} />
-                </button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="flex flex-col md:flex-row md:items-center md:gap-4 space-y-4 md:space-y-0">
+      {/* Category Select */}
+      <div className="flex flex-col w-full md:w-auto">
+        <Label htmlFor="category">Category</Label>
+          <Select
+              value={localCategory === "" ? "all" : localCategory}
+              onValueChange={(value) => {
+                setLocalCategory(value);
+                applyFilter(value, localStartDate, localEndDate);
+              }}
+            >
+              <SelectTrigger id="category" className="w-full md:w-48">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+      </div>
+
+      {/* Date Range Inputs */}
+      <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col">
+          <Label htmlFor="startDate">Start Date</Label>
+          <Input
+            type="date"
+            id="startDate"
+            value={localStartDate}
+            onChange={(e) => {
+              const newStart = e.target.value;
+              setLocalStartDate(newStart);
+              applyFilter(localCategory, newStart, localEndDate);
+            }}
+          />
+        </div>
+        <div className="flex flex-col">
+          <Label htmlFor="endDate">End Date</Label>
+          <Input
+            type="date"
+            id="endDate"
+            value={localEndDate}
+            min={localStartDate}
+            onChange={(e) => {
+              const newEnd = e.target.value;
+              setLocalEndDate(newEnd);
+              applyFilter(localCategory, localStartDate, newEnd);
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

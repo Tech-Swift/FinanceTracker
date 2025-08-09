@@ -71,7 +71,7 @@ export default function BudgetForm({ budget, onClose, onSuccess }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
   e.preventDefault();
 
   const { categoryId, amount, startDate, endDate } = formData;
@@ -97,18 +97,23 @@ export default function BudgetForm({ budget, onClose, onSuccess }) {
     } else {
       await axios.post("/budgets", payload);
       toast.success("Budget created successfully!");
+
+      // Reset form after successful creation
+      setFormData({
+        categoryId: "",
+        amount: "",
+        startDate: "",
+        endDate: "",
+      });
     }
 
-    // Safely call onSuccess if it's provided
     if (typeof onSuccess === "function") {
       onSuccess();
     }
 
-    // Always close the modal
     if (typeof onClose === "function") {
       onClose();
     }
-
   } catch (error) {
     console.error("Failed to submit budget", error);
     toast.error("Something went wrong while saving the budget.");
@@ -116,6 +121,7 @@ export default function BudgetForm({ budget, onClose, onSuccess }) {
     setLoading(false);
   }
 };
+
 
   return (
     <Dialog open onOpenChange={onClose}>
