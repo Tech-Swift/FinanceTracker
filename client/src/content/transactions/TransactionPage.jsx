@@ -78,7 +78,10 @@ export default function TransactionPage() {
 
 
   // Delete transaction
-  const handleDeleteTransaction = async (id) => {
+    const handleDeleteTransaction = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this transaction?");
+    if (!confirmed) return;
+
     try {
       await axios.delete(`/transactions/${id}`);
       setTransactions((prev) => prev.filter((t) => t._id !== id));
@@ -86,6 +89,7 @@ export default function TransactionPage() {
       console.error("Error deleting transaction:", error);
     }
   };
+
 
   // Apply filters
   const getFilteredTransactions = () => {
