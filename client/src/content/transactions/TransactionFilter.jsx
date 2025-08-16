@@ -1,87 +1,125 @@
 import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import axios from "../../lib/utils";
 
-export default function TransactionFilter({ onFilterChange }) {
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+export default function TransactionFilter({ onFilter }) {
+  const [categories, setCategories] = useState([]);
+  const [filters, setFilters] = useState({
+    from: "",
+    to: "",
+    category: "",
+    type: "",
+  });
 
+  // Fetch categories from backend
   useEffect(() => {
-    const filters = {
-      search: search.trim().toLowerCase(),
-      type,
-      from: dateFrom,
-      to: dateTo,
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/categories"); // adjust endpoint if needed
+        setCategories(res.data.categories || []);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
     };
-    onFilterChange(filters);
-  }, [search, type, dateFrom, dateTo]);
+    fetchCategories();
+  }, []);
 
-  const handleClear = () => {
-    setSearch("");
-    setType("all");
-    setDateFrom("");
-    setDateTo("");
+  const handleChange = (field, value) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const applyFilters = () => {
+    onFilter(filters);
+  };
+
+  const resetFilters = () => {
+    setFilters({ from: "", to: "", category: "", type: "" });
+    onFilter({});
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 w-full">
-      <div>
-        <Label htmlFor="search">Search</Label>
-        <Input
-          id="search"
-          placeholder="Search category or description"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+    <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 mb-4">
+      <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">Filter Transactions</h3>
 
-      <div>
-        <Label htmlFor="type">Type</Label>
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger id="type">
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-            <SelectItem value="expense">Expense</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="from">From</Label>
-        <Input
-          id="from"
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="to">To</Label>
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:gap-4 space-y-4 sm:space-y-0">
+        {/* From Date */}
+        <div className="flex flex-col w-full sm:w-48">
+          <Label htmlFor="from" className="text-gray-700 dark:text-gray-300">From</Label>
           <Input
-            id="to"
             type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            id="from"
+            value={filters.from}
+            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            onChange={(e) => handleChange("from", e.target.value)}
           />
-          <Button variant="outline" onClick={handleClear}>
-            Clear
-          </Button>
         </div>
+
+        {/* To Date */}
+        <div className="flex flex-col w-full sm:w-48">
+          <Label htmlFor="to" className="text-gray-700 dark:text-gray-300">To</Label>
+          <Input
+            type="date"
+            id="to"
+            value={filters.to}
+            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            onChange={(e) => handleChange("to", e.target.value)}
+          />
+        </div>
+
+        {/* Category Select */}
+        <div className="flex flex-col w-full sm:w-48">
+          <Label htmlFor="category" className="text-gray-700 dark:text-gray-300">Category</Label>
+          <Select
+            value={filters.category || "all"}
+            onValueChange={(value) => handleChange("category", value === "all" ? "" : value)}
+          >
+            <SelectTrigger id="category" className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+              <SelectItem value="all">All</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat._id} value={cat._id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: cat.color || "#ccc" }}
+                    />
+                    {cat.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Type */}
+        <div className="flex flex-col w-full sm:w-48">
+          <Label htmlFor="type" className="text-gray-700 dark:text-gray-300">Type</Label>
+          <select
+            id="type"
+            className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            value={filters.type}
+            onChange={(e) => handleChange("type", e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row gap-2 mt-4">
+        <Button onClick={applyFilters} className="w-full sm:w-auto">
+          Apply
+        </Button>
+        <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto">
+          Reset
+        </Button>
       </div>
     </div>
   );

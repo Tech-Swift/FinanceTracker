@@ -94,7 +94,10 @@ exports.updateTransaction = async (req, res) => {
     if (description !== undefined) transaction.description = description;
     if (date) transaction.date = date;
 
-    const updatedTransaction = await transaction.save();
+    await transaction.save();
+
+    // ✅ Populate categoryId before returning
+    const updatedTransaction = await Transaction.findById(transactionId).populate('categoryId');
 
     res.status(200).json({
       message: 'Transaction updated successfully',
@@ -104,6 +107,7 @@ exports.updateTransaction = async (req, res) => {
     res.status(500).json({ message: 'Failed to update transaction', error: error.message });
   }
 };
+
 
 // DELETE
 exports.deleteTransaction = async (req, res) => {

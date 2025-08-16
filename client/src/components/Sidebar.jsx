@@ -21,12 +21,11 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { setUser, setToken } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setUser(null);
-    setToken(null);
+    logout();
     navigate("/");
   };
 
@@ -69,6 +68,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </nav>
         </div>
 
+        {/* Logout Button */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 text-red-500 hover:text-red-700 text-sm mt-8"
@@ -78,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </button>
       </aside>
 
-      {/* Overlay when sidebar is open (mobile) */}
+      {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden"

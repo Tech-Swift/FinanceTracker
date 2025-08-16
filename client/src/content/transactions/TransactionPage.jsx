@@ -1,134 +1,142 @@
 import { useEffect, useState } from "react";
 import axios from "../../lib/utils";
-import { toast } from "sonner";
-
 import TransactionActions from "./TransactionActions";
 import TransactionFilter from "./TransactionFilter";
-import TransactionTable from "./TransactionTable";
 import TransactionForm from "./TransactionForm";
+import TransactionTable from "./TransactionTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function TransactionPage() {
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [filter, setFilter] = useState({ from: "", to: "", search: "", type: "" });
-
   const [showForm, setShowForm] = useState(false);
-  const [editingTxn, setEditingTxn] = useState(null); // null for create, txn object for edit
+  const [filters, setFilters] = useState({});
+  const [categories, setCategories] = useState([]);
 
+  // Fetch transactions from API
   const fetchTransactions = async () => {
-    setLoading(true);
     try {
-      let url = "/transactions";
-      const params = new URLSearchParams();
+      const res = await axios.get("/transactions");
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.transactions || [];
+      setTransactions(data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
 
-      if (filter.from && filter.to) {
-        params.append("from", filter.from);
-        params.append("to", filter.to);
-      }
-      if (filter.search) {
-        params.append("search", filter.search);
-      }
-      if (filter.type && filter.type !== "all") {
-        params.append("type", filter.type);
-      }
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const res = await axios.get(url);
-      const data = res.data;
-      const txns = Array.isArray(data?.transactions) ? data.transactions : [];
-
-      setTransactions(txns);
-      setError("");
+  // Fetch categories for displaying category names
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get("/categories");
+      setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Error fetching transactions:", err);
-      setError("Failed to load transactions.");
-    } finally {
-      setLoading(false);
+      console.error("Error fetching categories:", err);
     }
   };
 
   useEffect(() => {
     fetchTransactions();
-  }, [filter]);
+    fetchCategories();
+  }, []);
 
-  const handleFilterChange = (newFilters) => {
-    setFilter((prev) => ({ ...prev, ...newFilters }));
-  };
-
-  const handleEdit = (txn) => {
-    setEditingTxn(txn);
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id) => {
-    const confirmDelete = confirm("Are you sure you want to delete this transaction?");
-    if (!confirmDelete) return;
-
+  // Create new transaction
+  const handleCreateTransaction = async (newTx) => {
     try {
-      await axios.delete(`/transactions/${id}`);
-      toast.success("Transaction deleted");
-      fetchTransactions();
-    } catch (err) {
-      console.error("Failed to delete transaction", err);
-      toast.error("Failed to delete transaction");
+      const res = await axios.post("/transactions", newTx);
+      setTransactions((prev) => [res.data, ...prev]);
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating transaction:", error);
     }
   };
 
-  const handleFormSuccess = () => {
-    setShowForm(false);
-    setEditingTxn(null);
-    fetchTransactions();
-    toast.success("Transaction saved");
+  // Update transaction (for inline editing)
+    const handleUpdateTransaction = async (id, updatedData) => {
+    try {
+      const res = await axios.put(`/transactions/${id}`, updatedData);
+      const updatedTx = res.data.transaction;
+
+      // Ensure date is a proper ISO string for Inputs
+      if (updatedTx.date) {
+        updatedTx.date = new Date(updatedTx.date).toISOString();
+      }
+
+      setTransactions((prev) =>
+        prev.map((t) => (t._id === id ? updatedTx : t))
+      );
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+    }
+  };
+
+
+
+  // Delete transaction
+  const handleDeleteTransaction = async (id) => {
+    try {
+      await axios.delete(`/transactions/${id}`);
+      setTransactions((prev) => prev.filter((t) => t._id !== id));
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
+  };
+
+  // Apply filters
+  const getFilteredTransactions = () => {
+    if (!Array.isArray(transactions)) return [];
+
+    return transactions.filter((t) => {
+      const matchesFrom = filters.from
+        ? new Date(t.date) >= new Date(filters.from)
+        : true;
+      const matchesTo = filters.to
+        ? new Date(t.date) <= new Date(filters.to)
+        : true;
+      const matchesCategory = filters.category
+        ? t.categoryId?._id === filters.category
+        : true;
+      const matchesType = filters.type ? t.type === filters.type : true;
+      return matchesFrom && matchesTo && matchesCategory && matchesType;
+    });
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Transactions</h2>
-        <TransactionActions onActionComplete={() => {
-          setEditingTxn(null);
-          setShowForm(true);
-        }} />
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Actions Toolbar */}
+      <TransactionActions onNew={() => setShowForm(true)} />
 
-      <TransactionFilter filter={filter} onFilterChange={handleFilterChange} />
-
-      {showForm && (
-        <TransactionForm
-          mode={editingTxn ? "edit" : "create"}
-          initialData={editingTxn || {}}
-          onSuccess={handleFormSuccess}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingTxn(null);
-          }}
-        />
-      )}
-
-      {loading && <p className="text-center">Loading transactions...</p>}
-      {error && <p className="text-center text-red-500">{error}</p>}
-
-      {!loading && transactions.length === 0 && (
-        <p className="text-center text-gray-500">
-          {filter.from && filter.to
-            ? "No transactions on the selected date range."
-            : "No transactions available."}
-        </p>
-      )}
-
-      {!loading && transactions.length > 0 && (
-        <div className="overflow-x-auto w-full">
-          <TransactionTable
-            transactions={transactions}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+      {/* New Transaction Modal */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New Transaction</DialogTitle>
+          </DialogHeader>
+          <TransactionForm
+            onClose={() => setShowForm(false)}
+            onSuccess={async () => {
+              await fetchTransactions();
+              setShowForm(false);
+            }}
           />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Filters */}
+      <TransactionFilter onFilter={setFilters} />
+
+      {/* Transactions Table */}
+      <TransactionTable
+        transactions={getFilteredTransactions()}
+        onEditSave={handleUpdateTransaction} // ✅ matches TransactionTable prop
+        onDelete={handleDeleteTransaction}
+        categories={categories} // ✅ pass categories for display
+      />
     </div>
   );
 }

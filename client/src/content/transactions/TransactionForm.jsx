@@ -1,232 +1,223 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import axios from "@/lib/utils";
+import { toast } from "sonner";
+import axios from "../../lib/utils";
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
-// Validation schema
-const schema = z.object({
-  type: z.enum(["income", "expense"], {
-    required_error: "Type is required",
-  }),
-  categoryId: z.string().min(1, "Category is required"),
-  amount: z.coerce.number().positive("Amount must be positive"),
-  date: z.date(),
-  description: z.string().optional(),
-});
-
-export default function TransactionForm({ mode = "create", initialData = {}, onSuccess }) {
-  const [categories, setCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-
-  const form = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      type: initialData?.type ?? "expense",
-      categoryId: initialData?.categoryId ?? "",
-      amount: initialData?.amount ?? 0,
-      date: initialData?.date ? new Date(initialData.date) : new Date(),
-      description: initialData?.description ?? "",
-    },
+export default function TransactionForm({ transaction, onClose, onSuccess }) {
+  const [formData, setFormData] = useState({
+    type: "",
+    categoryId: "",
+    amount: "",
+    description: "",
+    date: "",
   });
 
-  useEffect(() => {
-    form.reset({
-      type: initialData?.type ?? "expense",
-      categoryId: initialData?.categoryId ?? "",
-      amount: initialData?.amount ?? 0,
-      date: initialData?.date ? new Date(initialData.date) : new Date(),
-      description: initialData?.description ?? "",
-    });
-  }, [initialData]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const isEditing = !!transaction;
 
-  // Load categories
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get("/categories");
         setCategories(res.data.categories || []);
-      } catch (error) {
-        console.error("Failed to fetch categories", error);
-      } finally {
-        setLoadingCategories(false);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+        setCategories([]);
       }
     };
     fetchCategories();
   }, []);
 
-  const onSubmit = async (values) => {
+  // Populate form if editing
+  useEffect(() => {
+    if (isEditing && transaction) {
+      setFormData({
+        type: transaction.type || "",
+        categoryId: transaction.categoryId || "",
+        amount: transaction.amount || "",
+        description: transaction.description || "",
+        date: transaction.date ? transaction.date.split("T")[0] : "",
+      });
+    }
+  }, [transaction, isEditing]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { type, categoryId, amount, description, date } = formData;
+
+    // Required fields check
+    if (!type || !categoryId || !amount) {
+      console.error("Type, category, and amount are required.");
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const payload = {
+      type,
+      categoryId,
+      amount: Number(amount),
+      description: description || "",
+      date: date || undefined,
+    };
+
     try {
-      const payload = { ...values, amount: Number(values.amount) };
-      if (mode === "edit" && initialData?._id) {
-        await axios.put(`/transactions/${initialData._id}`, payload);
+      setLoading(true);
+
+      if (isEditing) {
+        await axios.put(`/transactions/${transaction._id}`, payload);
+        toast.success("Transaction updated successfully!");
       } else {
         await axios.post("/transactions", payload);
+        toast.success("Transaction created successfully!");
+
+        // Reset form after creation
+        setFormData({
+          type: "",
+          categoryId: "",
+          amount: "",
+          description: "",
+          date: "",
+        });
       }
-      onSuccess?.();
-    } catch (err) {
-      console.error("Failed to submit transaction", err);
+
+      if (typeof onSuccess === "function") onSuccess();
+      if (typeof onClose === "function") onClose();
+    } catch (error) {
+      console.error("Failed to submit transaction", error);
+      toast.error("Something went wrong while saving the transaction.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Type */}
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Type</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md w-full">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? "Edit Transaction" : "New Transaction"}</DialogTitle>
 
-        {/* Category */}
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {loadingCategories ? (
-                    <SelectItem disabled value="loading">
-                      Loading...
-                    </SelectItem>
-                  ) : categories.length > 0 ? (
-                    categories.map((cat) => (
-                      <SelectItem key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem disabled value="none">
-                      No categories available
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </DialogHeader>
 
-        {/* Amount */}
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter amount"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Type Select */}
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select
+              value={formData.type}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, type: value }))
+              }
+            >
+              <SelectTrigger id="type" className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="income">Income</SelectItem>
+                <SelectItem value="expense">Expense</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Date */}
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value ? format(field.value, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Category Select */}
+          <div className="space-y-2">
+            <Label htmlFor="categoryId">Category</Label>
+            <Select
+              value={formData.categoryId}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, categoryId: value }))
+              }
+            >
+              <SelectTrigger id="categoryId" className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Description */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Optional description" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount (KES)</Label>
+            <Input
+              type="number"
+              id="amount"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              required
+              min="0"
+            />
+          </div>
 
-        <Button type="submit" className="w-full">
-          {mode === "edit" ? "Update Transaction" : "Create Transaction"}
-        </Button>
-      </form>
-    </Form>
+          {/* Description (optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input
+              type="text"
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Optional"
+            />
+          </div>
+
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              type="date"
+              id="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading
+                ? isEditing
+                  ? "Updating..."
+                  : "Creating..."
+                : isEditing
+                ? "Update"
+                : "Create"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
