@@ -4,7 +4,15 @@ import { Calendar } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, format } from "date-fns";
+import {
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  subWeeks,
+  subMonths,
+  format
+} from "date-fns";
 
 export default function ReportsHeader({
   type,
@@ -17,11 +25,17 @@ export default function ReportsHeader({
   onRangeChange
 }) {
   const [open, setOpen] = useState(false);
-  const [tempRange, setTempRange] = useState(range.start && range.end ? [range.start, range.end] : []);
+  const [tempRange, setTempRange] = useState(
+    range.start && range.end ? { from: range.start, to: range.end } : { from: null, to: null }
+  );
 
   // Keep tempRange in sync with props
   useEffect(() => {
-    if (range.start && range.end) setTempRange([range.start, range.end]);
+    if (range.start && range.end) {
+      setTempRange({ from: range.start, to: range.end });
+    } else {
+      setTempRange({ from: null, to: null });
+    }
   }, [range]);
 
   const formattedRange =
@@ -30,7 +44,8 @@ export default function ReportsHeader({
       : "Select date range";
 
   const resetRange = () => {
-    setTempRange([]);
+    console.log("Resetting range");
+    setTempRange({ from: null, to: null });
     onRangeChange({ start: null, end: null });
   };
 
@@ -63,7 +78,7 @@ export default function ReportsHeader({
         return;
     }
 
-    // Trigger fetch immediately
+    console.log(`Quick preset selected: ${preset}`, { start, end });
     onRangeChange({ start, end });
   };
 
@@ -73,8 +88,9 @@ export default function ReportsHeader({
       <Tabs
         value={type}
         onValueChange={(newType) => {
+          console.log("Report type changed:", newType);
           onTypeChange(newType);
-          if (newType !== "range") setTempRange([]);
+          if (newType !== "range") setTempRange({ from: null, to: null });
         }}
         className="flex-1"
       >
@@ -125,8 +141,11 @@ export default function ReportsHeader({
             <PopoverContent className="w-auto p-4 flex flex-col gap-2">
               <CalendarComponent
                 mode="range"
-                selected={tempRange}
-                onSelect={(selected) => setTempRange(selected)}
+                selected={tempRange} // Pass object directly, supports partial selection
+                onSelect={(selected) => {
+                  console.log("Calendar selection changed:", selected);
+                  setTempRange({ from: selected.from || null, to: selected.to || null });
+                }}
               />
               <div className="flex justify-end gap-2 mt-2">
                 <Button size="sm" variant="outline" onClick={resetRange}>
@@ -135,11 +154,12 @@ export default function ReportsHeader({
                 <Button
                   size="sm"
                   onClick={() => {
-                    if (tempRange.length === 2) {
-                      // Pass actual Date objects to parent
-                      onRangeChange({ start: tempRange[0], end: tempRange[1] });
+                    if (tempRange.from && tempRange.to) {
+                      console.log("Confirm clicked with range:", tempRange);
+                      onRangeChange({ start: tempRange.from, end: tempRange.to });
                       setOpen(false);
                     } else {
+                      console.log("Confirm clicked but range not fully selected:", tempRange);
                       setOpen(false);
                     }
                   }}

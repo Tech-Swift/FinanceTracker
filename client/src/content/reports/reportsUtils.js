@@ -11,25 +11,30 @@ import { format, getISOWeek } from "date-fns";
  * @param {string} [end] - Required if type === "range"
  * @returns {Promise<Object>} Report data
  */
-export const fetchReport = async (type, start, end) => {
+export const fetchReport = async (type, arg1, arg2) => {
   try {
-    let url = `/reports/${type}`;
+    let url = "/reports";
 
-    if (type === "range") {
-      if (!start || !end) throw new Error("Start and end dates are required for range reports");
-      const startStr = start instanceof Date ? format(start, "yyyy-MM-dd") : start;
-      const endStr = end instanceof Date ? format(end, "yyyy-MM-dd") : end;
-      url += `?start=${startStr}&end=${endStr}`;
-    } else if (type === "monthly") {
-      const monthStr = start instanceof Date ? format(start, "yyyy-MM") : start;
-      url += `?month=${monthStr}`;
-    } else if (type === "weekly") {
-      const weekStartStr = start instanceof Date ? format(start, "yyyy-MM-dd") : start;
-      url += `?weekStart=${weekStartStr}`;
+    switch (type) {
+      case "monthly":
+        url += `/monthly?month=${arg1}`;
+        console.log("Fetching monthly report with URL:", url);
+        break;
+      case "weekly":
+        url += `/weekly?weekStart=${arg1}`;
+        console.log("Fetching weekly report with URL:", url);
+        break;
+      case "range":
+        url += `/range?start=${arg1}&end=${arg2}`;
+        console.log("Fetching custom range report with URL:", url);
+        break;
+      default:
+        throw new Error("Invalid report type");
     }
 
-    const { data } = await axios.get(url, { withCredentials: true });
-    return data;
+    const response = await axios.get(url);
+    console.log("Report fetched successfully:", response.data);
+    return response.data;
   } catch (err) {
     console.error("❌ Error fetching report:", err);
     throw new Error("Unable to fetch report data. Please try again.");
