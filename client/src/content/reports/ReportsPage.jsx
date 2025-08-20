@@ -41,8 +41,6 @@ export default function ReportsPage() {
 
   // Fetch report whenever filters change
   useEffect(() => {
-    console.log("Triggering report fetch", { type, month, weekStart, range });
-
     const loadData = async () => {
       try {
         setLoading(true);
@@ -57,25 +55,25 @@ export default function ReportsPage() {
         } else if (type === "weekly") {
           const selectedWeek = weekStart || new Date();
           const weekStartStr = format(selectedWeek, "yyyy-MM-dd");
-          console.log("Fetching weekly report starting:", weekStartStr);
+          console.log("Fetching weekly report for week starting:", weekStartStr);
           result = await fetchReport("weekly", weekStartStr);
           const startOfWeekLabel = format(selectedWeek, "MMM dd");
           const endOfWeekLabel = format(new Date(selectedWeek.setDate(selectedWeek.getDate() + 6)), "MMM dd");
           setDisplayLabel(`Week: ${startOfWeekLabel} - ${endOfWeekLabel}`);
         } else if (type === "range") {
           if (!range.start || !range.end) {
-            console.log("Range not selected yet");
+            console.log("Range not selected yet, skipping fetch");
             setDisplayLabel("Custom Range: Not selected");
             return;
           }
           const startStr = format(range.start, "yyyy-MM-dd");
           const endStr = format(range.end, "yyyy-MM-dd");
-          console.log("Fetching range report:", { startStr, endStr });
+          console.log("Fetching custom range report for:", { start: startStr, end: endStr });
           result = await fetchReport("range", startStr, endStr);
+          console.log("Custom range report result:", result);
           setDisplayLabel(`Range: ${format(range.start, "MMM dd, yyyy")} - ${format(range.end, "MMM dd, yyyy")}`);
         }
 
-        console.log("Report data received:", result);
         setData(result);
       } catch (err) {
         console.error("Error fetching report:", err);
@@ -87,9 +85,6 @@ export default function ReportsPage() {
 
     loadData();
   }, [type, month, weekStart, range]);
-
-  // Also update display label whenever filters change
-  useEffect(() => updateDisplayLabel(), [type, month, weekStart, range]);
 
   return (
     <div className="space-y-6">
@@ -124,10 +119,12 @@ export default function ReportsPage() {
       ) : (
         <>
           <SummaryCards summary={data.summary} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CategoryDonutChart data={data.categories} />
             <TrendCharts data={data.trends} />
           </div>
+
           <TransactionsTable transactions={data.transactions} />
           <ExportButtons data={data} />
         </>
