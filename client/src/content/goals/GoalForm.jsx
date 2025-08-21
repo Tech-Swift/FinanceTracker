@@ -18,6 +18,7 @@ const goalSchema = z.object({
   targetAmount: z.number({ invalid_type_error: "Target amount must be a number" }).positive("Must be positive"),
   categoryId: z.string().optional(),
   deadline: z.string().nonempty("Deadline is required"),
+  addAmount: z.number().nonnegative("Amount must be positive").optional(),
 });
 
 export default function GoalForm({ open, setOpen, goal, categories = [], onSave }) {
@@ -35,6 +36,7 @@ export default function GoalForm({ open, setOpen, goal, categories = [], onSave 
       targetAmount: 0,
       categoryId: "",
       deadline: "",
+      addAmount: 0,
     },
   });
 
@@ -46,6 +48,7 @@ export default function GoalForm({ open, setOpen, goal, categories = [], onSave 
       setValue("targetAmount", goal.targetAmount || 0);
       setValue("categoryId", goal.categoryId?._id || "");
       setValue("deadline", goal.deadline ? goal.deadline.split("T")[0] : "");
+      setValue("addAmount", 0); // default for new addition
     } else {
       reset();
     }
@@ -53,13 +56,26 @@ export default function GoalForm({ open, setOpen, goal, categories = [], onSave 
 
   const submitHandler = async (data) => {
     try {
-      const payload = { ...data, targetAmount: Number(data.targetAmount) };
+      const payload = {
+        title: data.title,
+        description: data.description,
+        targetAmount: Number(data.targetAmount),
+        categoryId: data.categoryId || null,
+        deadline: data.deadline,
+        currentAmount: goal?.currentAmount || 0,
+      };
+
+      // Increment currentAmount if addAmount is provided
+      if (data.addAmount && goal) {
+        payload.currentAmount = (goal.currentAmount || 0) + Number(data.addAmount);
+      }
+
       await onSave(payload, goal?._id);
-      reset();
       setOpen(false);
-    } catch (error) {
-      console.error("Failed to save goal:", error);
-      toast.error("Failed to save goal. Try again.");
+      reset();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save goal");
     }
   };
 
@@ -88,9 +104,30 @@ export default function GoalForm({ open, setOpen, goal, categories = [], onSave 
           {/* Target Amount */}
           <div>
             <Label htmlFor="targetAmount">Target Amount</Label>
-            <Input id="targetAmount" type="number" step="0.01" {...register("targetAmount", { valueAsNumber: true })} />
+            <Input
+              id="targetAmount"
+              type="number"
+              step="0.01"
+              {...register("targetAmount", { valueAsNumber: true })}
+            />
             {errors.targetAmount && <p className="text-sm text-red-500">{errors.targetAmount.message}</p>}
           </div>
+
+          {/* Add Money Saved (only in edit mode) */}
+          {goal && (
+            <div>
+              <Label htmlFor="addAmount">Add Money Saved</Label>
+              <Input
+                id="addAmount"
+                type="number"
+                step="0.01"
+                {...register("addAmount", { valueAsNumber: true })}
+                placeholder="Enter amount to add"
+              />
+              <p className="text-xs text-gray-500">Optional: Add to current saved amount</p>
+              {errors.addAmount && <p className="text-sm text-red-500">{errors.addAmount.message}</p>}
+            </div>
+          )}
 
           {/* Category */}
           <div>
