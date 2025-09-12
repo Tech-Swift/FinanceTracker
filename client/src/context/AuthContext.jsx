@@ -60,8 +60,28 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      await axios.post('users/forgot-password', { email });
+      return true;
+    } catch (err) {
+      console.error("Forgot password Failed:", err);
+      return false;
+    }
+  };
+
+  const resetPassword = async (email) => {
+    try{
+      await axios.post('users/reset-password', { email });
+      return true;
+    } catch (err) {
+      console.error("Reset password failed :" , err);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, forgotPassword, resetPassword}}>
       {children}
     </AuthContext.Provider>
   );
