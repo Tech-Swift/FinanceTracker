@@ -26,6 +26,15 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'https://financetracker-3u4m.onrender.com',
   'http://localhost:5173'
 ];
+// Log incoming Origin header for debugging blocked CORS requests.
+app.use((req, res, next) => {
+  if (req.headers && req.headers.origin) {
+    console.log('Incoming request Origin header:', req.headers.origin);
+  } else {
+    console.log('Incoming request with no Origin header (same-origin or non-browser request)');
+  }
+  next();
+});
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -37,17 +46,34 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // allow any Render subdomain (covers frontends deployed on Render)
+    // try to parse the origin and inspect hostname to handle ports/trailing slashes
     try {
-      const lower = origin.toLowerCase();
-      if (lower.endsWith('.onrender.com')) {
+      const url = new URL(origin);
+      const hostname = url.hostname.toLowerCase();
+
+      // allow any Render subdomain by hostname
+      if (hostname.endsWith('.onrender.com')) {
         return callback(null, true);
       }
+
+      // also allow if hostname matches any configured allowed origin hostname
+      for (const a of allowedOrigins) {
+        try {
+          const ah = new URL(a).hostname.toLowerCase();
+          if (hostname === ah) return callback(null, true);
+        } catch (e) {
+          // if allowed origin isn't a full URL, compare raw strings
+          if (a === origin) return callback(null, true);
+        }
+      }
     } catch (e) {
-      // ignore and continue to rejection
+      // fallback: normalize origin string by trimming trailing slash and port
+      const normalized = origin.replace(/:\d+$/, '').replace(/\/$/, '').toLowerCase();
+      if (normalized.endsWith('.onrender.com')) return callback(null, true);
+      if (allowedOrigins.indexOf(normalized) !== -1) return callback(null, true);
     }
 
-    // not allowed
+    // not allowed — log and reject
     console.warn(`Blocked CORS request from origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
