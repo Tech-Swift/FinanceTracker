@@ -31,9 +31,24 @@ app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
+
+    // direct match to configured allowed origins
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     }
+
+    // allow any Render subdomain (covers frontends deployed on Render)
+    try {
+      const lower = origin.toLowerCase();
+      if (lower.endsWith('.onrender.com')) {
+        return callback(null, true);
+      }
+    } catch (e) {
+      // ignore and continue to rejection
+    }
+
+    // not allowed
+    console.warn(`Blocked CORS request from origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
