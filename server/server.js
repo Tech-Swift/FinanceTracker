@@ -20,11 +20,24 @@ connectDB();
 
 const app = express();
 
-//Enable Cors for frontend
+// Enable CORS for frontend. Use FRONTEND_URL env var for deployed client (Render)
+// and allow localhost for local development. Keep credentials: true for cookie auth.
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'https://financetracker-3u4m.onrender.com',
+  'http://localhost:5173'
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}))
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 
 // Middleware
 app.use(express.json());
@@ -48,5 +61,5 @@ app.use('/api/reports', reportRoutes);
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
