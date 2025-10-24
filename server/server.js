@@ -39,8 +39,7 @@ const corsOrigins = process.env.CORS_ORIGINS
       'http://localhost:5173',
       'http://localhost:3000',
       'https://financetracker-3u4m.onrender.com',
-      'https://financetracker-3u4m.vercel.app',
-      'https://financetracker-3u4m.netlify.app'
+      'https://finance-tracker-blush-six.vercel.app'
     ];
 
 console.log('🌍 Allowed CORS Origins:', corsOrigins);
