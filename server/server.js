@@ -32,43 +32,38 @@ connectDB();
 
 const app = express();
 
-// --- 🌐 CORS setup 
-const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',')
-  : [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://financetracker-3u4m.onrender.com',
-      'https://finance-tracker-blush-six.vercel.app'
-    ];
-
-console.log('🌍 Allowed CORS Origins:', corsOrigins);
+// --- 🌐 Enhanced CORS setup ---
+const allowedOrigins = [
+  'https://finance-tracker-blush-six.vercel.app', // your Vercel frontend
+  'https://financetracker-3u4m.onrender.com',    // your Render backend
+  'http://localhost:5173',                       // local dev (Vite)
+  'http://localhost:3000'                        // optional for tests
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-
-    if (corsOrigins.includes(origin)) {
-      return callback(null, true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`🚫 Blocked CORS request from: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
-
-    console.warn(`🚫 Blocked CORS request from: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  optionsSuccessStatus: 200, // fixes issues with legacy browsers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 };
 
-// ✅ Apply functional CORS
+// ✅ Apply CORS and preflight handling globally
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions)); // handle preflight requests globally
+app.options('*', cors(corsOptions));
 
-
-// --- Optional logging for debugging CORS issues ---
+// --- Debug logging for CORS ---
 app.use((req, res, next) => {
-  if (req.headers.origin && !corsOrigins.includes(req.headers.origin)) {
-    console.warn(`⚠️ CORS origin not matched: ${req.headers.origin}`);
+  console.log(`➡️ ${req.method} ${req.url}`);
+  if (req.headers.origin) {
+    console.log(`   🌍 Origin: ${req.headers.origin}`);
   }
   next();
 });
@@ -76,12 +71,7 @@ app.use((req, res, next) => {
 // --- Middleware ---
 app.use(express.json());
 
-// --- Request logging ---
-app.use((req, res, next) => {
-  console.log(`➡️ ${req.method} ${req.url}`);
-  next();
-});
-
+// --- Health check ---
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -104,4 +94,5 @@ app.use('/api/reports', reportRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log('🌍 Allowed Origins:', allowedOrigins);
 });
