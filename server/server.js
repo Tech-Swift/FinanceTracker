@@ -67,6 +67,15 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    environment: process.env.NODE_ENV,
+    database: process.env.MONGO_URI_PRODUCTION ? 'connected' : 'not connected',
+    time: new Date().toISOString(),
+  });
+});
+
 // --- Routes ---
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
