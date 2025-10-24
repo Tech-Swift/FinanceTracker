@@ -57,7 +57,7 @@ const corsOptions = {
 
 // ✅ Apply CORS and preflight handling globally
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // --- Debug logging for CORS ---
 app.use((req, res, next) => {
