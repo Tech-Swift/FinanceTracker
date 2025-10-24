@@ -1,21 +1,12 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  // Prefer PRODUCTION URI if available, then MONGO_URI, then fall back to local.
-  const uri = process.env.MONGO_URI_PRODUCTION || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/financeTrack';
+  const uri = process.env.MONGO_URI_PRODUCTION || process.env.MONGO_URI;
 
   try {
-    await mongoose.connect(uri,);
+    const conn = await mongoose.connect(uri,);
 
-    console.log(
-      `✅ MongoDB connected successfully to ${
-        uri.includes('mongodb+srv') ? 'PRODUCTION Cluster' : 'Local Instance'
-      }`
-    );
-
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
-    });
+    console.log(`✅ MongoDB connected successfully to DB: ${conn.connection.db.databaseName}`);
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
     process.exit(1);

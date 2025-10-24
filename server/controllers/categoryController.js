@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Category = require('../models/Category');
+
 
 // CREATE (Admin only)
 exports.createCategory = async (req, res) => {
@@ -22,12 +24,21 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// READ (Shared access)
 exports.getCategories = async (req, res) => {
   try {
+    console.log('📥 Fetching all categories...');
+
+    // Debug: check which DB and collection we are connected to
+    console.log('🗄️ DB Name:', mongoose.connection.name);
+    console.log('🌐 Host:', mongoose.connection.host);
+    console.log('🛠️ Collections:', Object.keys(mongoose.connection.collections));
+
     const categories = await Category.find({});
+
+    console.log(`📦 Found categories: ${categories.length}`);
     res.status(200).json({ categories });
   } catch (error) {
+    console.error('❌ Error fetching categories:', error.message);
     res.status(500).json({ message: 'Failed to fetch categories', error: error.message });
   }
 };
