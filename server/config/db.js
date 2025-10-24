@@ -1,18 +1,15 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  // Prefer Atlas URI if available, then MONGO_URI, then fall back to local.
-  const uri = process.env.MONGO_URI_ATLAS || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/financeTrack';
+  // Prefer PRODUCTION URI if available, then MONGO_URI, then fall back to local.
+  const uri = process.env.MONGO_URI_PRODUCTION || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/financeTrack';
 
   try {
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(uri,);
 
     console.log(
       `✅ MongoDB connected successfully to ${
-        uri.includes('mongodb+srv') ? 'Atlas Cluster' : 'Local Instance'
+        uri.includes('mongodb+srv') ? 'PRODUCTION Cluster' : 'Local Instance'
       }`
     );
 
