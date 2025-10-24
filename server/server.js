@@ -32,7 +32,7 @@ connectDB();
 
 const app = express();
 
-// --- 🌐 CORS setup (same style as CakeApp) ---
+// --- 🌐 CORS setup 
 const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
   : [
@@ -44,10 +44,26 @@ const corsOrigins = process.env.CORS_ORIGINS
 
 console.log('🌍 Allowed CORS Origins:', corsOrigins);
 
-app.use(cors({
-  origin: corsOrigins,
-  credentials: true
-}));
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn(`🚫 Blocked CORS request from: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200, // fixes issues with legacy browsers
+};
+
+// ✅ Apply functional CORS
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions)); // handle preflight requests globally
+
 
 // --- Optional logging for debugging CORS issues ---
 app.use((req, res, next) => {
