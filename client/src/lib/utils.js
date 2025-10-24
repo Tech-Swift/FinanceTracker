@@ -1,21 +1,24 @@
-import axios from "axios";
+import axios from 'axios';
 
-// Axios setup
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+// Detect environment
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-if (!import.meta.env.VITE_API_BASE_URL) {
-  // helpful during development to know which backend is being used
-  // Vite will replace import.meta.env values at build time
-  console.info(`Using fallback API_BASE_URL: ${API_BASE_URL}`);
-}
+// Choose base URL automatically
+const API_BASE_URL = isLocal
+  ? 'http://localhost:3000/api'
+  : import.meta.env.VITE_API_BASE_URL || 'https://financetracker-3u4m.onrender.com/api';
 
-const axiosInstance = axios.create({
+// Create Axios instance
+const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
-export default axiosInstance;
-
-export function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
+// Optional: log which backend is used
+if (isLocal) {
+  console.info(`🧑‍💻 Using local backend: ${API_BASE_URL}`);
+} else {
+  console.info(`🌍 Using production backend: ${API_BASE_URL}`);
 }
+
+export default api;
